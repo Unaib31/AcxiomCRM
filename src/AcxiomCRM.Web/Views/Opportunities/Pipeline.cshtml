@@ -1,0 +1,41 @@
+@model PipelineBoardViewModel
+@{
+  ViewData["Title"] = "Pipeline board";
+  var stages = Enum.GetValues<OpportunityStage>();
+}
+<div class="page-header">
+  <div><h1>Pipeline board</h1><div class="sub">Open pipeline @Ui.Money(Model.Opportunities.Where(o => o.Stage is not ("Won" or "Lost")).Sum(o => o.Amount)) · weighted @Ui.Money(Model.Opportunities.Where(o => o.Stage is not ("Won" or "Lost")).Sum(o => o.WeightedAmount))</div></div>
+  <form method="get" class="d-flex gap-2 align-items-end">
+    <div><label class="form-label small mb-0" for="assignedTo">Owner</label><select id="assignedTo" name="assignedTo" class="form-select form-select-sm"><option value="">Everyone in scope</option>@foreach (var o in Model.Owners) { <option value="@o.Id" selected="@(Model.AssignedTo == o.Id)">@o.Name</option> }</select></div>
+    <button class="btn btn-sm btn-outline-primary" type="submit">Apply</button>
+  </form>
+</div>
+<div class="board">
+@foreach (var s in stages)
+{
+  var items = Model.Opportunities.Where(o => o.Stage == s.ToString()).ToList();
+  <section class="board-col" aria-label="@s">
+    <h2><span><span class="badge-soft badge-soft-@Ui.Badge(s.ToString())">@s</span> <span class="text-muted">@items.Count</span></span><span>@Ui.Money(items.Sum(i => i.Amount))</span></h2>
+    @foreach (var d in items.Take(30))
+    {
+      <div class="deal">
+        <a class="row-title d-block" asp-route-action="Details" asp-route-id="@d.OpportunityId" asp-route="default">@d.OpportunityName</a>
+        <div class="sub-text">@d.CustomerName</div>
+        <div class="d-flex justify-content-between mt-2"><strong>@Ui.Money(d.Amount)</strong><span class="sub-text">@d.Probability%</span></div>
+        <div class="sub-text">Close @d.ExpectedCloseDate.ToString("dd MMM") · @d.AssignedToName</div>
+        @if (s is not (OpportunityStage.Won or OpportunityStage.Lost))
+        {
+          <form method="post" asp-route-action="ChangeStage" asp-route-id="@d.OpportunityId" class="mt-2 d-flex gap-1" asp-route="default">
+            <input type="hidden" name="returnTo" value="pipeline" />
+            <select name="Stage" class="form-select form-select-sm" aria-label="Move @d.OpportunityName to stage">
+              @foreach (var t in stages.Where(t => t != s)) { <option value="@t">Move to @t</option> }
+            </select>
+            <button class="btn btn-sm btn-outline-primary" type="submit" data-no-lock aria-label="Move"><i class="bi bi-arrow-right"></i></button>
+          </form>
+        }
+      </div>
+    }
+    @if (items.Count == 0) { <div class="empty-state py-4"><i class="bi bi-inbox"></i><strong class="d-block text-body mb-1">No deals in this stage</strong>Deals appear here as your pipeline progresses.</div> }
+  </section>
+}
+</div>

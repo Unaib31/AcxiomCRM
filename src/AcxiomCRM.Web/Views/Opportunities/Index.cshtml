@@ -1,0 +1,49 @@
+@model ListViewModel<OpportunityDto, OpportunityQuery>
+@{ ViewData["Title"] = "Opportunities"; var q = Model.Query; }
+<div class="page-header">
+  <div><h1>Opportunities</h1><div class="sub">@Model.Result.TotalCount opportunit@(Model.Result.TotalCount == 1 ? "y" : "ies")</div></div>
+  <div class="d-flex gap-2"><a class="btn btn-outline-primary" asp-route-action="Pipeline" asp-route="default"><i class="bi bi-kanban me-1"></i>Pipeline board</a><a class="btn btn-primary" asp-route-action="Create" asp-route="default"><i class="bi bi-plus-lg me-1"></i>New opportunity</a></div>
+</div>
+<div class="card mb-3"><form method="get" class="filter-bar row g-2 align-items-end">
+  <div class="col-md-4"><label class="form-label small" for="search">Search</label><input id="search" name="search" value="@q.Search" class="form-control" placeholder="Opportunity or customer" maxlength="100" /></div>
+  <div class="col-md-2"><label class="form-label small" for="stage">Stage</label>
+    <select id="stage" name="stage" class="form-select"><option value="">All</option>@foreach (var s in Enum.GetValues<OpportunityStage>()) { <option value="@s" selected="@(q.Stage == s)">@s</option> }</select></div>
+  <div class="col-md-2"><label class="form-label small" for="state">Status</label>
+    <select id="state" name="state" class="form-select"><option value="">All</option>@foreach (var s in new[] { "Open", "Won", "Lost" }) { <option value="@s" selected="@(string.Equals(q.State, s, StringComparison.OrdinalIgnoreCase))">@s</option> }</select></div>
+  <div class="col-md-2"><label class="form-label small" for="assignedTo">Owner</label>
+    <select id="assignedTo" name="assignedTo" class="form-select"><option value="">Anyone</option>@foreach (var o in Model.Owners) { <option value="@o.Id" selected="@(q.AssignedTo == o.Id)">@o.Name</option> }</select></div>
+  <div class="col-md-2 d-flex gap-2"><button class="btn btn-primary flex-fill" type="submit">Filter</button><a class="btn btn-outline-secondary" asp-route-action="Index" aria-label="Clear filters" asp-route="default"><i class="bi bi-x-lg"></i></a></div>
+</form></div>
+<div class="card">
+@if (Model.Result.Items.Count == 0) { <div class="empty-state"><i class="bi bi-briefcase"></i><strong class="d-block text-body mb-1">No matching opportunities</strong>Try a different search or clear your filters.<div class="d-flex justify-content-center gap-3 mt-3"><a asp-route-action="Index" asp-route="default">Clear filters</a><a asp-route-action="Create" asp-route="default">New opportunity <i class="bi bi-arrow-right"></i></a></div></div> }
+else
+{
+<div class="table-responsive"><table class="table table-hover">
+  <thead><tr>
+    <partial name="_SortTh" model='("Opportunity", "name", (string?)null)' />
+    <partial name="_SortTh" model='("Customer", "customer", (string?)null)' />
+    <partial name="_SortTh" model='("Stage", "stage", (string?)null)' />
+    <partial name="_SortTh" model='("Amount", "amount", "num")' />
+    <partial name="_SortTh" model='("Prob.", "probability", "num")' />
+    <th scope="col" class="num">Weighted</th>
+    <partial name="_SortTh" model='("Close date", "close", (string?)null)' />
+    <th scope="col">Owner</th>
+  </tr></thead>
+  <tbody>
+  @foreach (var o in Model.Result.Items)
+  {
+    <tr>
+      <td><a class="row-title" asp-route-action="Details" asp-route-id="@o.OpportunityId" asp-route="default">@o.OpportunityName</a><div class="sub-text">@o.OpportunityCode</div></td>
+      <td>@o.CustomerName</td>
+      <td><span class="badge-soft badge-soft-@Ui.Badge(o.Stage)">@o.Stage</span></td>
+      <td class="num">@Ui.Money(o.Amount)</td>
+      <td class="num">@o.Probability%</td>
+      <td class="num">@Ui.Money(o.WeightedAmount)</td>
+      <td class="text-nowrap">@o.ExpectedCloseDate.ToString("dd MMM yyyy")</td>
+      <td>@o.AssignedToName</td>
+    </tr>
+  }
+  </tbody></table></div>
+  <partial name="_Pager" model="(Model.Result.Page, Model.Result.TotalPages, Model.Result.TotalCount, Model.Result.PageSize)" />
+}
+</div>

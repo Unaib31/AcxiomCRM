@@ -1,0 +1,23 @@
+@model RolesViewModel
+@{
+  ViewData["Title"] = "Roles & permissions";
+  var matrix = new (string Module, string Admin, string Manager, string Exec)[]
+  {
+    ("Dashboard", "Full", "Team", "Own / assigned"), ("Customers", "Full", "Team / business scope", "Own / assigned"), ("Leads", "Full", "Team", "Own / assigned"),
+    ("Follow-ups", "Full", "Team", "Own / assigned"), ("Opportunities", "Full", "Team", "Own / assigned"), ("Activities", "Full", "Team", "Own / assigned"),
+    ("User management", "Full", "View team (configurable)", "No"), ("Role management", "Full", "No", "No"),
+    ("Audit log", "Full", "Limited view (configurable)", "No"), ("REST API", "Authorised endpoints", "Authorised endpoints", "Authorised endpoints"),
+    ("Reports", "All", "Management / team reports", "Own / assigned reports"),
+  };
+}
+<div class="page-header"><div><h1>Roles &amp; permissions</h1><div class="sub">Each user holds exactly one primary role. Rules are enforced on the server for pages and API alike.</div></div></div>
+<div class="row g-3 mb-3">
+@foreach (var r in Model.Roles)
+{
+  <div class="col-md-4"><div class="card h-100"><div class="card-body"><div class="d-flex justify-content-between"><h2 class="h5">@RoleNames.Display(r.Role)</h2><span class="badge-soft badge-soft-primary">@r.Users user@(r.Users == 1 ? "" : "s")</span></div><p class="text-muted mb-0">@r.Description</p></div></div></div>
+}
+</div>
+<div class="card"><div class="card-header">Permission matrix</div><div class="table-responsive"><table class="table">
+  <thead><tr><th>Module</th><th>Admin</th><th>Manager</th><th>Sales Executive</th></tr></thead><tbody>
+  @foreach (var m in matrix) { <tr><td class="row-title">@m.Module</td><td>@m.Admin</td><td>@m.Manager</td><td>@m.Exec</td></tr> }
+</tbody></table></div></div>

@@ -1,0 +1,9 @@
+@model UserDto
+@{ ViewData["Title"] = "Password reset link"; }
+<div class="page-header"><div><h1>Password reset link</h1><div class="sub">For @Model.FullName (@Model.Email)</div></div></div>
+<div class="card maxw-860"><div class="card-body">
+  <div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-1"></i> This link is shown <strong>only once</strong>. Share it with the user through a secure channel. It can be used a single time and expires automatically.</div>
+  <label class="form-label" for="reset-link">One-time link</label>
+  <div class="input-group mb-3"><input id="reset-link" class="form-control mono" readonly value="@ViewData["Link"]" /><button class="btn btn-outline-primary" type="button" data-copy="#reset-link" data-no-lock>Copy</button></div>
+  <a class="btn btn-primary" asp-route-action="Details" asp-route-id="@Model.Id" asp-route="default">Done</a>
+</div></div>

@@ -1,0 +1,49 @@
+@model AuditViewModel
+@{ ViewData["Title"] = "Audit log"; var q = Model.Query; var admin = User.IsInRole(RoleNames.Admin); }
+<div class="page-header">
+  <div><h1>Audit log</h1><div class="sub">@Model.Result.TotalCount event@(Model.Result.TotalCount == 1 ? "" : "s") · append-only@(admin ? "" : " · team business events")</div></div>
+  <a class="btn btn-outline-primary" href="@(Url.Action("Export")+Context.Request.QueryString)"><i class="bi bi-download me-1"></i>Export CSV</a>
+</div>
+<div class="card mb-3"><form method="get" class="filter-bar row g-2 align-items-end">
+  <div class="col-md-2"><label class="form-label small" for="userId">User</label><select id="userId" name="userId" class="form-select"><option value="">Anyone</option>@foreach (var u in Model.Users) { <option value="@u.Id" selected="@(q.UserId == u.Id)">@u.Name</option> }</select></div>
+  <div class="col-md-2"><label class="form-label small" for="module">Module</label><select id="module" name="module" class="form-select"><option value="">All</option>@foreach (var m in Model.Modules) { <option value="@m" selected="@(q.Module == m)">@m</option> }</select></div>
+  <div class="col-md-2"><label class="form-label small" for="action">Action</label><select id="action" name="action" class="form-select"><option value="">All</option>@foreach (var a in Model.Actions) { <option value="@a" selected="@(q.Action == a)">@a</option> }</select></div>
+  <div class="col-md-1"><label class="form-label small" for="result">Result</label><select id="result" name="result" class="form-select"><option value="">All</option><option selected="@(q.Result == "Success")">Success</option><option selected="@(q.Result == "Failure")">Failure</option></select></div>
+  <div class="col-md-2"><label class="form-label small" for="from">From</label><input id="from" type="date" name="from" value="@q.From?.ToString("yyyy-MM-dd")" class="form-control" /></div>
+  <div class="col-md-2"><label class="form-label small" for="to">To</label><input id="to" type="date" name="to" value="@q.To?.ToString("yyyy-MM-dd")" class="form-control" /></div>
+  <div class="col-md-1 d-flex gap-2"><button class="btn btn-primary flex-fill" type="submit" aria-label="Apply filters"><i class="bi bi-funnel"></i></button></div>
+  <div class="col-md-4"><label class="form-label small" for="search">Search details</label><input id="search" name="search" value="@q.Search" class="form-control" maxlength="100" /></div>
+</form></div>
+<div class="card">
+@if (Model.Result.Items.Count == 0) { <div class="empty-state"><i class="bi bi-journal-text"></i>No audit events match your filters.</div> }
+else
+{
+<div class="table-responsive"><table class="table table-hover">
+  <thead><tr><th>Time</th><th>User</th><th>Module</th><th>Action</th><th>Record</th><th>Result</th><th>Details</th>@if (admin) { <th>IP</th> }</tr></thead>
+  <tbody>
+  @foreach (var a in Model.Result.Items)
+  {
+    <tr>
+      <td class="text-nowrap">@a.CreatedLocal.ToString("dd MMM yyyy HH:mm:ss")</td>
+      <td>@(a.UserName ?? "—")</td>
+      <td>@a.Module</td>
+      <td class="fw-semibold">@a.Action</td>
+      <td>@if (a.EntityName is not null) { <span>@a.EntityName #@a.RecordId</span> }</td>
+      <td><span class="badge-soft badge-soft-@Ui.Badge(a.Result)">@a.Result</span></td>
+      <td>
+        @if (!string.IsNullOrEmpty(a.Details)) { <div>@a.Details</div> }
+        @if (admin && (a.OldValue is not null || a.NewValue is not null))
+        {
+          <details class="small"><summary class="text-muted">Values</summary>
+            @if (a.OldValue is not null) { <div class="mono"><span class="text-danger">−</span> @a.OldValue</div> }
+            @if (a.NewValue is not null) { <div class="mono"><span class="text-success">+</span> @a.NewValue</div> }
+          </details>
+        }
+      </td>
+      @if (admin) { <td class="text-muted small">@a.IpAddress</td> }
+    </tr>
+  }
+  </tbody></table></div>
+  <partial name="_Pager" model="(Model.Result.Page, Model.Result.TotalPages, Model.Result.TotalCount, Model.Result.PageSize)" />
+}
+</div>

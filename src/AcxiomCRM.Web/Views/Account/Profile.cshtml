@@ -1,0 +1,11 @@
+@model AcxiomCRM.Domain.Entities.ApplicationUser
+@{ ViewData["Title"] = "My profile"; }
+<div class="page-header"><div><h1>My profile</h1></div><a class="btn btn-outline-primary" asp-route-action="ChangePassword" asp-route="default"><i class="bi bi-key me-1"></i>Change password</a></div>
+<div class="card maxw-720"><div class="card-body">
+  <div class="d-flex align-items-center gap-3 mb-4"><span class="avatar fs-5 avatar-lg">@Ui.Initials(Model.FullName)</span><div><div class="h5 mb-0">@Model.FullName</div><div class="text-muted">@Model.Email</div></div></div>
+  <dl class="row detail-list mb-0">
+    <dt class="col-sm-4">Role</dt><dd class="col-sm-8">@ViewData["Role"]</dd>
+    <dt class="col-sm-4">Account created</dt><dd class="col-sm-8">@Clock.ToLocal(Model.CreatedDate).ToString("dd MMM yyyy")</dd>
+    <dt class="col-sm-4">Last sign-in</dt><dd class="col-sm-8">@(Model.LastLoginDate is { } d ? Clock.ToLocal(d).ToString("dd MMM yyyy, HH:mm") : "—")</dd>
+  </dl>
+</div></div>

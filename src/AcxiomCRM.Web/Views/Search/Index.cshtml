@@ -1,0 +1,21 @@
+@model SearchViewModel
+@{ ViewData["Title"] = "Search"; }
+<div class="page-header"><div><h1>Search</h1><div class="sub">@(Model.Query.Length < 2 ? "Type at least 2 characters in the search box." : $"{Model.Hits.Count} result(s) for “{Model.Query}”")</div></div></div>
+@if (Model.Query.Length >= 2)
+{
+  <div class="card">
+  @if (Model.Hits.Count == 0) { <div class="empty-state"><i class="bi bi-search"></i>Nothing found. Results only include records you can access.</div> }
+  else
+  {
+    <div class="list-group list-group-flush">
+    @foreach (var h in Model.Hits)
+    {
+      <a class="list-group-item list-group-item-action d-flex align-items-center gap-3" href="@h.Url">
+        <span class="badge-soft badge-soft-@(h.Type switch { "Customer" => "info", "Lead" => "warning", _ => "success" })">@h.Type</span>
+        <span><span class="row-title">@h.Title</span><span class="sub-text d-block">@h.Subtitle</span></span>
+      </a>
+    }
+    </div>
+  }
+  </div>
+}

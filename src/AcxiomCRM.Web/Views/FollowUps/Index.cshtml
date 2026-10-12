@@ -1,0 +1,70 @@
+@model FollowUpsViewModel
+@{ ViewData["Title"] = "Follow-ups"; var q = Model.Query; var view = (q.View ?? "upcoming").ToLowerInvariant(); }
+<div class="page-header">
+  <div><h1>Follow-ups</h1><div class="sub">Schedule, complete and track customer touchpoints</div></div>
+  <a class="btn btn-primary" asp-route-action="Create" asp-route="default"><i class="bi bi-calendar-plus me-1"></i>Schedule follow-up</a>
+</div>
+<ul class="nav nav-pills mb-3 gap-1">
+  <li class="nav-item"><a class="nav-link @(view == "overdue" ? "active" : "")" asp-route-action="Index" asp-route-view="overdue" asp-route-assignedTo="@q.AssignedTo" asp-route="default">Overdue <span class="badge text-bg-@(Model.OverdueCount > 0 ? "danger" : "secondary")">@Model.OverdueCount</span></a></li>
+  <li class="nav-item"><a class="nav-link @(view == "today" ? "active" : "")" asp-route-action="Index" asp-route-view="today" asp-route-assignedTo="@q.AssignedTo" asp-route="default">Today <span class="badge text-bg-secondary">@Model.TodayCount</span></a></li>
+  <li class="nav-item"><a class="nav-link @(view == "upcoming" ? "active" : "")" asp-route-action="Index" asp-route-view="upcoming" asp-route-assignedTo="@q.AssignedTo" asp-route="default">Upcoming <span class="badge text-bg-secondary">@Model.UpcomingCount</span></a></li>
+  <li class="nav-item"><a class="nav-link @(view == "all" ? "active" : "")" asp-route-action="Index" asp-route-view="all" asp-route-assignedTo="@q.AssignedTo" asp-route="default">All</a></li>
+</ul>
+<div class="card mb-3"><form method="get" class="filter-bar row g-2 align-items-end">
+  <input type="hidden" name="view" value="@view" />
+  <div class="col-md-3"><label class="form-label small" for="search">Search</label><input id="search" name="search" value="@q.Search" class="form-control" placeholder="Subject or related record" maxlength="100" /></div>
+  <div class="col-md-2"><label class="form-label small" for="from">From</label><input id="from" type="date" name="from" value="@q.From?.ToString("yyyy-MM-dd")" class="form-control" /></div>
+  <div class="col-md-2"><label class="form-label small" for="to">To</label><input id="to" type="date" name="to" value="@q.To?.ToString("yyyy-MM-dd")" class="form-control" /></div>
+  <div class="col-md-2"><label class="form-label small" for="status">Status</label>
+    <select id="status" name="status" class="form-select"><option value="">Any</option>@foreach (var s in Enum.GetValues<FollowUpStatus>()) { <option value="@s" selected="@(q.Status == s)">@s</option> }</select></div>
+  <div class="col-md-2"><label class="form-label small" for="assignedTo">Assigned user</label>
+    <select id="assignedTo" name="assignedTo" class="form-select"><option value="">Anyone</option>@foreach (var o in Model.Owners) { <option value="@o.Id" selected="@(q.AssignedTo == o.Id)">@o.Name</option> }</select></div>
+  <div class="col-md-1 d-flex gap-2"><button class="btn btn-primary flex-fill" type="submit" aria-label="Apply filters"><i class="bi bi-funnel"></i></button></div>
+</form></div>
+<div class="card">
+@if (Model.Result.Items.Count == 0) { <div class="empty-state"><i class="bi bi-calendar2-check"></i><strong class="d-block text-body mb-1">No follow-ups in this view</strong>Your schedule is clear for the selected filters.<a class="d-block mt-3" asp-route-action="Create" asp-route="default">Schedule a follow-up <i class="bi bi-arrow-right"></i></a></div> }
+else
+{
+<div class="table-responsive"><table class="table table-hover">
+  <thead><tr>
+    <partial name="_SortTh" model='("Date", "date", (string?)null)' />
+    <partial name="_SortTh" model='("Subject", "subject", (string?)null)' />
+    <th scope="col">Related to</th>
+    <partial name="_SortTh" model='("Type", "type", (string?)null)' />
+    <partial name="_SortTh" model='("Status", "status", (string?)null)' />
+    <th scope="col">Assigned</th>
+    <th scope="col"><span class="visually-hidden">Actions</span></th>
+  </tr></thead>
+  <tbody>
+  @foreach (var f in Model.Result.Items)
+  {
+    var returnUrl = Context.Request.Path + Context.Request.QueryString;
+    var relCtl = f.RelatedType switch { "Customer" => "Customers", "Lead" => "Leads", _ => "Opportunities" };
+    <tr>
+      <td class="text-nowrap">@f.FollowUpDate.ToString("dd MMM yyyy")@if (f.IsOverdue) { <div class="text-danger small">@((Clock.Today.DayNumber - f.FollowUpDate.DayNumber)) day(s) overdue</div> }</td>
+      <td><span class="row-title">@f.Subject</span>@if (!string.IsNullOrEmpty(f.Remarks)) { <div class="sub-text text-truncate maxw-720">@f.Remarks</div> }</td>
+      <td><a asp-route-controller="@relCtl" asp-route-action="Details" asp-route-id="@f.RelatedId" asp-route="default">@f.RelatedName</a><div class="sub-text">@f.RelatedType</div></td>
+      <td>@f.FollowUpType</td>
+      <td><span class="badge-soft badge-soft-@(f.IsOverdue ? "danger" : Ui.Badge(f.Status))">@(f.IsOverdue ? "Overdue" : f.Status)</span></td>
+      <td>@f.AssignedToName</td>
+      <td class="text-end text-nowrap">
+        @if (f.Status is "Planned" or "Missed")
+        {
+          <form method="post" asp-route-action="Complete" asp-route-id="@f.FollowUpId" class="d-inline" asp-route="default"><input type="hidden" name="returnUrl" value="@returnUrl" /><button class="btn btn-sm btn-outline-success" type="submit" title="Mark complete" aria-label="Complete @f.Subject"><i class="bi bi-check2-circle"></i></button></form>
+          <a class="btn btn-sm btn-outline-secondary" asp-route-action="Edit" asp-route-id="@f.FollowUpId" title="Edit / reschedule" aria-label="Edit @f.Subject" asp-route="default"><i class="bi bi-pencil"></i></a>
+        }
+        @if (f.IsOverdue)
+        {
+          <form method="post" asp-route-action="Miss" asp-route-id="@f.FollowUpId" class="d-inline" data-confirm="Mark this follow-up as missed?" data-confirm-title="Mark as missed" data-confirm-ok="Mark missed" asp-route="default"><input type="hidden" name="returnUrl" value="@returnUrl" /><button class="btn btn-sm btn-outline-warning" type="submit" data-no-lock title="Mark missed" aria-label="Mark missed"><i class="bi bi-exclamation-triangle"></i></button></form>
+        }
+        @if (f.Status == "Planned")
+        {
+          <form method="post" asp-route-action="Cancel" asp-route-id="@f.FollowUpId" class="d-inline" data-confirm="Cancel this follow-up?" data-confirm-title="Cancel follow-up" data-confirm-ok="Cancel follow-up" asp-route="default"><input type="hidden" name="returnUrl" value="@returnUrl" /><button class="btn btn-sm btn-outline-danger" type="submit" data-no-lock title="Cancel" aria-label="Cancel @f.Subject"><i class="bi bi-x-lg"></i></button></form>
+        }
+      </td>
+    </tr>
+  }
+  </tbody></table></div>
+  <partial name="_Pager" model="(Model.Result.Page, Model.Result.TotalPages, Model.Result.TotalCount, Model.Result.PageSize)" />
+}
+</div>

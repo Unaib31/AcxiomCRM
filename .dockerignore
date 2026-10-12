@@ -1,0 +1,9 @@
+**/bin/
+**/obj/
+**/App_Data/
+**/*.db
+**/*.log
+tests/
+.git/
+.vs/
+.env

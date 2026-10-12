@@ -1,0 +1,51 @@
+@model ListViewModel<LeadDto, LeadQuery>
+@{ ViewData["Title"] = "Leads"; var q = Model.Query; }
+<div class="page-header">
+  <div><h1>Leads</h1><div class="sub">@Model.Result.TotalCount lead@(Model.Result.TotalCount == 1 ? "" : "s")</div></div>
+  <a class="btn btn-primary" asp-route-action="Create" asp-route="default"><i class="bi bi-plus-lg me-1"></i>New lead</a>
+</div>
+<div class="card mb-3"><form method="get" class="filter-bar row g-2 align-items-end">
+  <div class="col-md-4"><label class="form-label small" for="search">Search</label><input id="search" name="search" value="@q.Search" class="form-control" placeholder="Lead name, company, email or phone" maxlength="100" /></div>
+  <div class="col-md-2"><label class="form-label small" for="status">Status</label>
+    <select id="status" name="status" class="form-select"><option value="">All</option>@foreach (var s in Enum.GetValues<LeadStatus>()) { <option value="@s" selected="@(q.Status == s)">@s</option> }</select></div>
+  <div class="col-md-2"><label class="form-label small" for="priority">Priority</label>
+    <select id="priority" name="priority" class="form-select"><option value="">All</option>@foreach (var s in Enum.GetValues<LeadPriority>()) { <option value="@s" selected="@(q.Priority == s)">@s</option> }</select></div>
+  <div class="col-md-2"><label class="form-label small" for="assignedTo">Assigned user</label>
+    <select id="assignedTo" name="assignedTo" class="form-select"><option value="">Anyone</option>@foreach (var o in Model.Owners) { <option value="@o.Id" selected="@(q.AssignedTo == o.Id)">@o.Name</option> }</select></div>
+  <div class="col-md-2 d-flex gap-2"><button class="btn btn-primary flex-fill" type="submit">Filter</button><a class="btn btn-outline-secondary" asp-route-action="Index" aria-label="Clear filters" asp-route="default"><i class="bi bi-x-lg"></i></a></div>
+</form></div>
+<div class="card">
+@if (Model.Result.Items.Count == 0) { <div class="empty-state"><i class="bi bi-funnel"></i><strong class="d-block text-body mb-1">No matching leads</strong>Try a different search or clear your filters.<div class="d-flex justify-content-center gap-3 mt-3"><a asp-route-action="Index" asp-route="default">Clear filters</a><a asp-route-action="Create" asp-route="default">New lead <i class="bi bi-arrow-right"></i></a></div></div> }
+else
+{
+<div class="table-responsive"><table class="table table-hover">
+  <thead><tr>
+    <partial name="_SortTh" model='("Lead", "name", (string?)null)' />
+    <partial name="_SortTh" model='("Company", "company", (string?)null)' />
+    <th scope="col">Source</th>
+    <partial name="_SortTh" model='("Status", "status", (string?)null)' />
+    <partial name="_SortTh" model='("Priority", "priority", (string?)null)' />
+    <partial name="_SortTh" model='("Expected value", "value", "num")' />
+    <th scope="col">Assigned</th>
+    <th scope="col"><span class="visually-hidden">Actions</span></th>
+  </tr></thead>
+  <tbody>
+  @foreach (var l in Model.Result.Items)
+  {
+    <tr>
+      <td><a class="row-title" asp-route-action="Details" asp-route-id="@l.LeadId" asp-route="default">@l.LeadName</a><div class="sub-text">@l.LeadCode</div></td>
+      <td>@(l.CompanyName ?? "—")</td>
+      <td>@Ui.Spaced(l.Source)</td>
+      <td><span class="badge-soft badge-soft-@Ui.Badge(l.Status)">@l.Status</span></td>
+      <td><span class="badge-soft badge-soft-@Ui.Badge(l.Priority)">@l.Priority</span></td>
+      <td class="num">@Ui.Money(l.ExpectedValue)</td>
+      <td>@l.AssignedToName</td>
+      <td class="text-end text-nowrap">
+        @if (l.Status != nameof(LeadStatus.Converted)) { <a class="btn btn-sm btn-outline-secondary" asp-route-action="Edit" asp-route-id="@l.LeadId" aria-label="Edit @l.LeadName" asp-route="default"><i class="bi bi-pencil"></i></a> }
+      </td>
+    </tr>
+  }
+  </tbody></table></div>
+  <partial name="_Pager" model="(Model.Result.Page, Model.Result.TotalPages, Model.Result.TotalCount, Model.Result.PageSize)" />
+}
+</div>

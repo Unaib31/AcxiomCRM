@@ -1,0 +1,10 @@
+@model ReportIndexViewModel
+@{ ViewData["Title"] = "Reports"; }
+<div class="page-header"><div><h1>Reports</h1><div class="sub">Data is limited to what your role is allowed to see. Every report supports filters and CSV export.</div></div></div>
+<div class="row g-3">
+@foreach (var r in Model.Reports)
+{
+  <div class="col-md-6 col-xl-4"><a class="card h-100 text-body text-decoration-none kpi" asp-route-action="Run" asp-route-id="@r.Key" asp-route="default">
+    <span class="icon c-blue"><i class="bi @r.Icon"></i></span><span><span class="fw-semibold d-block">@r.Title</span><span class="sub-text">@r.Description</span></span></a></div>
+}
+</div>

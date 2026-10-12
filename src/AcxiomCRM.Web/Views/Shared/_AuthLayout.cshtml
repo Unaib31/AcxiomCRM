@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>@(ViewData["Title"] is string t ? t + " · " : "")AcxiomCRM</title>
+  <script src="~/js/theme.js"></script>
+  <link rel="stylesheet" href="~/lib/bootstrap/bootstrap.min.css" />
+  <link rel="stylesheet" href="~/lib/bootstrap-icons/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+<div class="auth-wrap">
+  <section class="auth-hero" aria-hidden="true">
+    <div class="d-flex align-items-center gap-2 fs-4 fw-bold"><span class="brand-mark">A</span> AcxiomCRM</div>
+    <div>
+      <h2>One place for every customer, lead and deal.</h2>
+      <ul>
+        <li><i class="bi bi-shield-check"></i> Role-based access with full audit trail</li>
+        <li><i class="bi bi-graph-up-arrow"></i> Live pipeline, forecasts and conversion insight</li>
+        <li><i class="bi bi-calendar-check"></i> Follow-up reminders so nothing slips</li>
+      </ul>
+    </div>
+    <small class="opacity-75">© @Clock.Today.Year AcxiomCRM</small>
+  </section>
+  <main class="auth-panel" id="main">
+    <div class="auth-card">
+      <partial name="_Alerts" />
+      @RenderBody()
+    </div>
+  </main>
+</div>
+<script src="~/lib/jquery/jquery.min.js"></script>
+<script src="~/lib/jquery-validation/jquery.validate.min.js"></script>
+<script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+<script src="~/lib/bootstrap/bootstrap.bundle.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+</body>
+</html>

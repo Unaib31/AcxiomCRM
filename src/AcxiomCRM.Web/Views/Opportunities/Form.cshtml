@@ -1,0 +1,34 @@
+@using System.Text.Json
+@model OpportunityInput
+@{
+  var id = ViewData["EntityId"] as int?;
+  var edit = id is not null;
+  ViewData["Title"] = edit ? "Edit opportunity" : "New opportunity";
+  var defaults = JsonSerializer.Serialize(Enum.GetValues<OpportunityStage>().ToDictionary(s => s.ToString(), s => AcxiomCRM.Domain.Rules.OpportunityRules.DefaultProbability(s)));
+  var stageItems = (IEnumerable<SelectListItem>)ViewData["Stages"]!;
+  var closing = Model.Stage is OpportunityStage.Won or OpportunityStage.Lost;
+}
+<div class="page-header"><div><h1>@ViewData["Title"]</h1><div class="sub">Set the deal value, stage and expected close date.</div></div></div>
+<div class="card maxw-1000"><div class="card-body">
+<form method="post" asp-route-action="@(edit ? "Edit" : "Create")" asp-route-id="@id" novalidate asp-route="default">
+  <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
+  <div class="form-section">Deal</div>
+  <div class="row g-3">
+    <crm-field for="OpportunityName" col="col-md-6" autofocus="true" />
+    <crm-field for="CustomerId" type="select" items-key="Customers" option-label="Select a customer…" col="col-md-6" />
+    <crm-field for="Amount" type="text" inputmode="decimal" prefix="₹" col="col-md-4" hint="Must be greater than 0." />
+    <div class="col-md-4">
+      <label class="form-label" asp-for="Stage"></label>
+      <select asp-for="Stage" class="form-select" asp-items="stageItems" data-defaults="@defaults"></select>
+      <span asp-validation-for="Stage" class="field-error"></span>
+    </div>
+    <crm-field for="Probability" type="number" col="col-md-4" hint="0 to 100. Won sets 100, Lost sets 0." />
+    <crm-field for="ExpectedCloseDate" type="date" col="col-md-4" hint="Cannot be in the past for active opportunities." />
+    <crm-field for="Source" type="select" items-key="Sources" option-label="—" col="col-md-4" />
+    <crm-field for="AssignedTo" label="Owner" type="select" items-key="Owners" col="col-md-4" />
+    <crm-field for="Notes" type="textarea" rows="4" col="col-12" />
+    <div id="outcome-group" class="col-12 @(closing ? "" : "d-none")"><div class="row"><crm-field for="OutcomeNotes" type="textarea" rows="2" col="col-12" hint="Capture the final outcome when closing as Won or Lost." /></div></div>
+  </div>
+  <div class="mt-4 d-flex gap-2"><button class="btn btn-primary" type="submit"><i class="bi bi-check2 me-1"></i>@(edit ? "Save changes" : "Create opportunity")</button>
+    <a class="btn btn-outline-secondary" asp-route-action="@(edit ? "Details" : "Index")" asp-route-id="@id" asp-route="default">Cancel</a></div>
+</form></div></div>

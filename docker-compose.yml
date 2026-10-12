@@ -1,0 +1,23 @@
+# Runs AcxiomCRM behind your own TLS-terminating reverse proxy (nginx, Caddy, Traefik, a cloud load balancer…).
+# The container speaks plain HTTP on 8080 and trusts X-Forwarded-Proto/For from the proxy; never expose 8080 publicly.
+services:
+  crm:
+    build: .
+    image: acxiomcrm:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      Jwt__Key: ${JWT_KEY:?Set JWT_KEY to a random string of 32+ characters}
+      Seed__AdminEmail: ${ADMIN_EMAIL:?Set ADMIN_EMAIL for the first administrator}
+      Seed__AdminPassword: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD (remove it again after the first start)}
+      Clock__TimeZoneId: ${TIME_ZONE:-Asia/Kolkata}
+    volumes:
+      - crm-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+volumes:
+  crm-data:

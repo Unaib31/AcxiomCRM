@@ -1,0 +1,35 @@
+@model UserCreateInput
+@{
+  var id = ViewData["EntityId"] as string;
+  var edit = id is not null;
+  var isSelf = ViewData["IsSelf"] is true;
+  ViewData["Title"] = edit ? "Edit user" : "New user";
+}
+<div class="page-header"><div><h1>@ViewData["Title"]</h1></div></div>
+<div class="card maxw-860"><div class="card-body">
+<form method="post" asp-route-action="@(edit ? "Edit" : "Create")" asp-route-id="@id" novalidate autocomplete="off" asp-route="default">
+  <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
+  @if (isSelf) { <div class="alert alert-info py-2">You are editing your own account. Your role and active status cannot be changed here.</div> }
+  <div class="form-section">Profile</div>
+  <div class="row g-3">
+    <crm-field for="FullName" col="col-md-6" autofocus="true" />
+    <crm-field for="Email" type="email" col="col-md-6" autocomplete="off" />
+  </div>
+  <div class="form-section">Access</div>
+  <div class="row g-3">
+    <crm-field for="Role" type="select" items-key="Roles" col="col-md-4" disabled="@isSelf" hint="Exactly one primary role." />
+    <crm-field for="ManagerId" type="select" items-key="Managers" option-label="— none —" col="col-md-4" hint="Sales Executives only." />
+    <div class="col-md-4 d-flex align-items-end"><crm-field for="IsActive" type="checkbox" col="col-12" label="Account is active" disabled="@isSelf" /></div>
+  </div>
+  @if (isSelf) { <input type="hidden" name="Role" value="@Model.Role" /><input type="hidden" name="IsActive" value="true" /> }
+  @if (!edit)
+  {
+    <div class="form-section">Initial password</div>
+    <div class="row g-3">
+      <crm-field for="Password" type="password" col="col-md-6" autocomplete="new-password" hint="8+ characters, upper and lower case, a number and a symbol." />
+      <crm-field for="ConfirmPassword" type="password" col="col-md-6" autocomplete="new-password" />
+    </div>
+  }
+  <div class="mt-4 d-flex gap-2"><button class="btn btn-primary" type="submit"><i class="bi bi-check2 me-1"></i>@(edit ? "Save changes" : "Create user")</button>
+    <a class="btn btn-outline-secondary" asp-route-action="@(edit ? "Details" : "Index")" asp-route-id="@id" asp-route="default">Cancel</a></div>
+</form></div></div>

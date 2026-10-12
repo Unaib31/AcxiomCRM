@@ -1,0 +1,15 @@
+@* Model: (string Label, string Key, string? CssClass). Toggles sort direction while keeping filters. *@
+@model (string Label, string Key, string? Css)
+@{
+  var q = Context.Request.Query;
+  var current = q["sort"].ToString();
+  var desc = q["desc"].ToString().Equals("true", StringComparison.OrdinalIgnoreCase);
+  var isCurrent = current.Equals(Model.Key, StringComparison.OrdinalIgnoreCase);
+  var parts = q.Where(k => !k.Key.Equals("sort", StringComparison.OrdinalIgnoreCase) && !k.Key.Equals("desc", StringComparison.OrdinalIgnoreCase) && !k.Key.Equals("page", StringComparison.OrdinalIgnoreCase))
+    .SelectMany(k => k.Value.Select(v => $"{Uri.EscapeDataString(k.Key)}={Uri.EscapeDataString(v ?? "")}")).ToList();
+  parts.Add("sort=" + Model.Key); parts.Add("desc=" + (isCurrent && !desc ? "true" : "false"));
+  var href = Context.Request.Path + "?" + string.Join("&", parts);
+}
+<th class="@Model.Css" scope="col" aria-sort="@(isCurrent ? (desc ? "descending" : "ascending") : "none")">
+  <a href="@href">@Model.Label @if (isCurrent) { <i class="bi bi-caret-@(desc ? "down" : "up")-fill small"></i> }</a>
+</th>

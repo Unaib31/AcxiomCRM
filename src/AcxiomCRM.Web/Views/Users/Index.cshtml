@@ -1,0 +1,40 @@
+@model ListViewModel<UserDto, UserQuery>
+@{ ViewData["Title"] = "Users"; var q = Model.Query; }
+<div class="page-header">
+  <div><h1>Users</h1><div class="sub">@Model.Result.TotalCount user@(Model.Result.TotalCount == 1 ? "" : "s")@(User.IsInRole(RoleNames.Admin) ? "" : " · read-only team view")</div></div>
+  @if (User.IsInRole(RoleNames.Admin)) { <a class="btn btn-primary" asp-route-action="Create" asp-route="default"><i class="bi bi-person-plus me-1"></i>New user</a> }
+</div>
+<div class="card mb-3"><form method="get" class="filter-bar row g-2 align-items-end">
+  <div class="col-md-4"><label class="form-label small" for="search">Search</label><input id="search" name="search" value="@q.Search" class="form-control" placeholder="Name or email" maxlength="100" /></div>
+  <div class="col-md-2"><label class="form-label small" for="role">Role</label><select id="role" name="role" class="form-select"><option value="">All roles</option>@foreach (var r in RoleNames.All) { <option value="@r" selected="@(q.Role == r)">@RoleNames.Display(r)</option> }</select></div>
+  <div class="col-md-2"><label class="form-label small" for="active">Account</label><select id="active" name="active" class="form-select"><option value="">Any</option><option value="true" selected="@(q.Active == true)">Active</option><option value="false" selected="@(q.Active == false)">Inactive</option></select></div>
+  <div class="col-md-2"><label class="form-label small" for="locked">Lockout</label><select id="locked" name="locked" class="form-select"><option value="">Any</option><option value="true" selected="@(q.Locked == true)">Locked</option><option value="false" selected="@(q.Locked == false)">Not locked</option></select></div>
+  <div class="col-md-2 d-flex gap-2"><button class="btn btn-primary flex-fill" type="submit">Filter</button><a class="btn btn-outline-secondary" asp-route-action="Index" aria-label="Clear filters" asp-route="default"><i class="bi bi-x-lg"></i></a></div>
+</form></div>
+<div class="card">
+@if (Model.Result.Items.Count == 0) { <div class="empty-state"><i class="bi bi-person-x"></i>No users match your filters.</div> }
+else
+{
+<div class="table-responsive"><table class="table table-hover">
+  <thead><tr>
+    <partial name="_SortTh" model='("User", "name", (string?)null)' />
+    <th scope="col">Role</th><th scope="col">Reports to</th><th scope="col">Account</th><th scope="col">Lockout</th>
+    <th scope="col">Last sign-in</th><th scope="col"><span class="visually-hidden">Actions</span></th>
+  </tr></thead>
+  <tbody>
+  @foreach (var u in Model.Result.Items)
+  {
+    <tr>
+      <td><div class="d-flex align-items-center gap-2"><span class="avatar">@Ui.Initials(u.FullName)</span><div><a class="row-title" asp-route-action="Details" asp-route-id="@u.Id" asp-route="default">@u.FullName</a><div class="sub-text">@u.Email</div></div></div></td>
+      <td>@RoleNames.Display(u.Role)</td>
+      <td>@(u.ManagerName ?? "—")</td>
+      <td><span class="badge-soft badge-soft-@(u.IsActive ? "success" : "secondary")">@(u.IsActive ? "Active" : "Inactive")</span></td>
+      <td>@if (u.IsLockedOut) { <span class="badge-soft badge-soft-danger"><i class="bi bi-lock-fill"></i> Locked</span> } else if (u.FailedLoginCount > 0) { <span class="sub-text">@u.FailedLoginCount failed attempt(s)</span> } else { <span class="text-muted">—</span> }</td>
+      <td class="text-nowrap">@(u.LastLoginDate is { } d ? Clock.ToLocal(d).ToString("dd MMM yyyy HH:mm") : "Never")</td>
+      <td class="text-end">@if (User.IsInRole(RoleNames.Admin)) { <a class="btn btn-sm btn-outline-secondary" asp-route-action="Edit" asp-route-id="@u.Id" aria-label="Edit @u.FullName" asp-route="default"><i class="bi bi-pencil"></i></a> }</td>
+    </tr>
+  }
+  </tbody></table></div>
+  <partial name="_Pager" model="(Model.Result.Page, Model.Result.TotalPages, Model.Result.TotalCount, Model.Result.PageSize)" />
+}
+</div>

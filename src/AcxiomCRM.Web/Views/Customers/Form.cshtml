@@ -1,0 +1,32 @@
+@model CustomerInput
+@{
+  var id = ViewData["EntityId"] as int?;
+  var edit = id is not null;
+  ViewData["Title"] = edit ? "Edit customer" : "New customer";
+}
+<div class="page-header"><div><h1>@ViewData["Title"]</h1><div class="sub">Keep contact information and account ownership in one place.</div></div></div>
+<div class="card maxw-1000"><div class="card-body">
+<form method="post" asp-route-action="@(edit ? "Edit" : "Create")" asp-route-id="@id" novalidate asp-route="default">
+  <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
+  <div class="form-section">Contact</div>
+  <div class="row g-3">
+    <crm-field for="CustomerName" col="col-md-6" autocomplete="off" autofocus="true" />
+    <crm-field for="CompanyName" col="col-md-6" />
+    <crm-field for="Email" type="email" col="col-md-6" placeholder="name@company.com" />
+    <crm-field for="Phone" type="tel" col="col-md-6" placeholder="9876543210" hint="10-digit mobile number; +91 prefix allowed." />
+  </div>
+  <div class="form-section">Address</div>
+  <div class="row g-3">
+    <crm-field for="Address" col="col-12" />
+    <crm-field for="City" col="col-md-6" />
+    <crm-field for="State" col="col-md-6" />
+  </div>
+  <div class="form-section">Account</div>
+  <div class="row g-3">
+    <crm-field for="Status" type="select" items-key="Statuses" col="col-md-6" />
+    <crm-field for="AssignedTo" label="Assigned sales executive" type="select" items-key="Owners" col="col-md-6" />
+    <crm-field for="Notes" type="textarea" rows="4" col="col-12" />
+  </div>
+  <div class="mt-4 d-flex gap-2"><button class="btn btn-primary" type="submit"><i class="bi bi-check2 me-1"></i>@(edit ? "Save changes" : "Create customer")</button>
+    <a class="btn btn-outline-secondary" asp-route-action="@(edit ? "Details" : "Index")" asp-route-id="@id" asp-route="default">Cancel</a></div>
+</form></div></div>

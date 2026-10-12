@@ -1,0 +1,29 @@
+@model LeadInput
+@{
+  var id = ViewData["EntityId"] as int?;
+  var edit = id is not null;
+  ViewData["Title"] = edit ? "Edit lead" : "New lead";
+}
+<div class="page-header"><div><h1>@ViewData["Title"]</h1><div class="sub">Capture the contact and details you need for the next conversation.</div></div></div>
+<div class="card maxw-1000"><div class="card-body">
+<form method="post" asp-route-action="@(edit ? "Edit" : "Create")" asp-route-id="@id" novalidate asp-route="default">
+  <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
+  <div class="form-section">Contact</div>
+  <div class="row g-3">
+    <crm-field for="LeadName" col="col-md-6" autofocus="true" />
+    <crm-field for="CompanyName" col="col-md-6" />
+    <crm-field for="Email" type="email" col="col-md-6" placeholder="name@company.com" />
+    <crm-field for="Phone" type="tel" col="col-md-6" placeholder="9876543210" hint="10-digit mobile number; +91 prefix allowed." />
+  </div>
+  <div class="form-section">Qualification</div>
+  <div class="row g-3">
+    <crm-field for="Source" type="select" items-key="Sources" col="col-md-4" />
+    <crm-field for="Status" type="select" items-key="Statuses" col="col-md-4" hint="@(edit ? "Only valid next steps are listed. Use Convert to convert a qualified lead." : "")" />
+    <crm-field for="Priority" type="select" items-key="Priorities" col="col-md-4" />
+    <crm-field for="ExpectedValue" type="text" inputmode="decimal" prefix="₹" col="col-md-4" />
+    <crm-field for="AssignedTo" label="Assigned sales executive" type="select" items-key="Owners" col="col-md-8" />
+    <crm-field for="Notes" type="textarea" rows="4" col="col-12" />
+  </div>
+  <div class="mt-4 d-flex gap-2"><button class="btn btn-primary" type="submit"><i class="bi bi-check2 me-1"></i>@(edit ? "Save changes" : "Create lead")</button>
+    <a class="btn btn-outline-secondary" asp-route-action="@(edit ? "Details" : "Index")" asp-route-id="@id" asp-route="default">Cancel</a></div>
+</form></div></div>

@@ -1,0 +1,64 @@
+@model CustomerDetailsViewModel
+@{ var c = Model.Customer; ViewData["Title"] = c.CustomerName; }
+<nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a asp-route-action="Index" asp-route="default">Customers</a></li><li class="breadcrumb-item active" aria-current="page">@c.CustomerCode</li></ol></nav>
+<div class="page-header">
+  <div class="d-flex align-items-center gap-3"><span class="avatar avatar-lg">@Ui.Initials(c.CustomerName)</span>
+    <div><h1>@c.CustomerName</h1><div class="sub">@(c.CompanyName ?? "No company") · <span class="badge-soft badge-soft-@Ui.Badge(c.Status)">@c.Status</span></div></div></div>
+  <div class="d-flex flex-wrap gap-2">
+    <a class="btn btn-outline-primary" asp-route-controller="Opportunities" asp-route-action="Create" asp-route-customerId="@c.CustomerId" asp-route="default"><i class="bi bi-briefcase me-1"></i>New opportunity</a>
+    <a class="btn btn-outline-primary" asp-route-controller="FollowUps" asp-route-action="Create" asp-route-relatedType="Customer" asp-route-relatedId="@c.CustomerId" asp-route="default"><i class="bi bi-calendar-plus me-1"></i>Schedule follow-up</a>
+    <a class="btn btn-outline-primary" asp-route-controller="Activities" asp-route-action="Create" asp-route-customerId="@c.CustomerId" asp-route="default"><i class="bi bi-telephone-plus me-1"></i>Log activity</a>
+    <a class="btn btn-primary" asp-route-action="Edit" asp-route-id="@c.CustomerId" asp-route="default"><i class="bi bi-pencil me-1"></i>Edit</a>
+    @if (Model.CanDelete)
+    {
+      <form method="post" asp-route-action="Delete" asp-route-id="@c.CustomerId" data-confirm="Delete @c.CustomerName? The customer will be removed from lists and reports." data-confirm-title="Delete customer" data-confirm-ok="Delete" asp-route="default">
+        <button class="btn btn-outline-danger" type="submit" data-no-lock><i class="bi bi-trash me-1"></i>Delete</button></form>
+    }
+  </div>
+</div>
+<div class="row g-3">
+  <div class="col-lg-4">
+    <div class="card mb-3"><div class="card-header">Details</div><div class="card-body"><dl class="detail-list mb-0">
+      <dt>Email</dt><dd><a href="mailto:@c.Email">@c.Email</a></dd>
+      <dt>Phone</dt><dd><a href="tel:@c.Phone">@c.Phone</a></dd>
+      <dt>Address</dt><dd>@(string.Join(", ", new[] { c.Address, c.City, c.State }.Where(x => !string.IsNullOrWhiteSpace(x))) is { Length: > 0 } addr ? addr : "—")</dd>
+      <dt>Assigned to</dt><dd>@c.AssignedToName</dd>
+      <dt>Created</dt><dd>@Clock.ToLocal(c.CreatedDate).ToString("dd MMM yyyy")</dd>
+      <dt>Last modified</dt><dd>@Clock.ToLocal(c.ModifiedDate).ToString("dd MMM yyyy, HH:mm")</dd>
+      <dt>Notes</dt><dd class="pre-wrap mb-0">@(c.Notes ?? "—")</dd>
+    </dl></div></div>
+    <div class="card"><div class="card-header">History</div><div class="card-body">
+      @if (Model.History.Count == 0) { <span class="text-muted">No recorded changes.</span> }
+      else { <ul class="timeline small">@foreach (var h in Model.History) { <li><span class="fw-semibold">@h.Action</span> by @(h.UserName ?? "system")<div class="text-muted">@h.CreatedLocal.ToString("dd MMM yyyy HH:mm")@(h.Details is null ? "" : " · " + h.Details)</div></li> }</ul> }
+    </div></div>
+  </div>
+  <div class="col-lg-8">
+    <div class="card mb-3"><div class="card-header">Opportunities (@Model.Opportunities.Count)</div>
+    @if (Model.Opportunities.Count == 0) { <div class="empty-state py-4"><i class="bi bi-briefcase"></i>No opportunities yet.</div> }
+    else { <div class="table-responsive"><table class="table table-hover"><tbody>
+      @foreach (var o in Model.Opportunities) { <tr><td><a class="row-title" asp-route-controller="Opportunities" asp-route-action="Details" asp-route-id="@o.OpportunityId" asp-route="default">@o.OpportunityName</a><div class="sub-text">Close @o.ExpectedCloseDate.ToString("dd MMM yyyy")</div></td>
+        <td><span class="badge-soft badge-soft-@Ui.Badge(o.Stage)">@o.Stage</span></td><td class="num">@Ui.Money(o.Amount)</td></tr> }
+    </tbody></table></div> }
+    </div>
+    <div class="card mb-3"><div class="card-header">Follow-ups (@Model.FollowUps.Count)</div>
+    @if (Model.FollowUps.Count == 0) { <div class="empty-state py-4"><i class="bi bi-calendar2"></i>No follow-ups.</div> }
+    else { <div class="table-responsive"><table class="table table-hover"><tbody>
+      @foreach (var f in Model.FollowUps) { <tr><td><a class="row-title" asp-route-controller="FollowUps" asp-route-action="Edit" asp-route-id="@f.FollowUpId" asp-route="default">@f.Subject</a><div class="sub-text">@f.FollowUpType · @f.AssignedToName</div></td>
+        <td class="text-nowrap">@f.FollowUpDate.ToString("dd MMM yyyy")</td><td><span class="badge-soft badge-soft-@(f.IsOverdue ? "danger" : Ui.Badge(f.Status))">@(f.IsOverdue ? "Overdue" : f.Status)</span></td></tr> }
+    </tbody></table></div> }
+    </div>
+    <div class="card mb-3"><div class="card-header">Activities (@Model.Activities.Count)</div>
+    @if (Model.Activities.Count == 0) { <div class="empty-state py-4"><i class="bi bi-telephone"></i>No activities logged.</div> }
+    else { <div class="table-responsive"><table class="table"><tbody>
+      @foreach (var a in Model.Activities) { <tr><td><i class="bi bi-@(a.ActivityType switch { "Call" => "telephone", "Meeting" => "people", "Email" => "envelope", _ => "check2-square" }) me-2 text-muted"></i><span class="row-title">@a.Subject</span><div class="sub-text ms-4">@a.ActivityType · @a.AssignedToName</div></td>
+        <td class="text-nowrap">@a.ActivityDate.ToString("dd MMM yyyy")</td><td><span class="badge-soft badge-soft-@Ui.Badge(a.Status)">@a.Status</span></td></tr> }
+    </tbody></table></div> }
+    </div>
+    @if (Model.Leads.Count > 0)
+    {
+      <div class="card"><div class="card-header">Converted from leads</div><div class="table-responsive"><table class="table"><tbody>
+        @foreach (var l in Model.Leads) { <tr><td><a class="row-title" asp-route-controller="Leads" asp-route-action="Details" asp-route-id="@l.LeadId" asp-route="default">@l.LeadName</a><div class="sub-text">@l.LeadCode</div></td><td class="text-end">@l.ConvertedDate?.ToString("dd MMM yyyy")</td></tr> }
+      </tbody></table></div></div>
+    }
+  </div>
+</div>

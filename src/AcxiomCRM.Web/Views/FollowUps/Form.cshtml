@@ -1,0 +1,40 @@
+@model FollowUpInput
+@{
+  var id = ViewData["EntityId"] as int?;
+  var edit = id is not null;
+  ViewData["Title"] = edit ? "Edit / reschedule follow-up" : "Schedule follow-up";
+  var customers = (IEnumerable<SelectListItem>)ViewData["Customers"]!;
+  var leads = (IEnumerable<SelectListItem>)ViewData["Leads"]!;
+  var opps = (IEnumerable<SelectListItem>)ViewData["Opportunities"]!;
+}
+<div class="page-header"><div><h1>@ViewData["Title"]</h1><div class="sub">Choose a related record, owner and date for the next step.</div></div></div>
+<div class="card maxw-1000"><div class="card-body">
+<form method="post" asp-route-action="@(edit ? "Edit" : "Create")" asp-route-id="@id" novalidate asp-route="default">
+  <input type="hidden" name="returnUrl" value="@Context.Request.Query["returnUrl"]" />
+  <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
+  <div class="form-section">Related record</div>
+  <div class="row g-3">
+    <crm-field for="RelatedType" label="Related to" type="select" items-key="RelatedTypes" col="col-md-4" />
+    <div class="col-md-8">
+      <label class="form-label" asp-for="RelatedId"></label><span class="text-danger ms-1" aria-hidden="true">*</span>
+      <select asp-for="RelatedId" class="form-select">
+        <option value="">Select a record…</option>
+        @foreach (var c in customers) { <option value="@c.Value" data-type="Customer" selected="@(Model.RelatedType == RelatedType.Customer && Model.RelatedId?.ToString() == c.Value)">@c.Text</option> }
+        @foreach (var l in leads) { <option value="@l.Value" data-type="Lead" selected="@(Model.RelatedType == RelatedType.Lead && Model.RelatedId?.ToString() == l.Value)">@l.Text</option> }
+        @foreach (var o in opps) { <option value="@o.Value" data-type="Opportunity" selected="@(Model.RelatedType == RelatedType.Opportunity && Model.RelatedId?.ToString() == o.Value)">@o.Text</option> }
+      </select>
+      <span asp-validation-for="RelatedId" class="field-error"></span>
+    </div>
+  </div>
+  <div class="form-section">Schedule</div>
+  <div class="row g-3">
+    <crm-field for="Subject" col="col-md-8" autofocus="true" />
+    <crm-field for="FollowUpType" type="select" items-key="Types" col="col-md-4" />
+    <crm-field for="FollowUpDate" type="date" col="col-md-4" hint="Cannot be earlier than today." />
+    <crm-field for="Status" type="select" items-key="Statuses" col="col-md-4" />
+    <crm-field for="AssignedTo" label="Assigned user" type="select" items-key="Owners" col="col-md-4" />
+    <crm-field for="Remarks" type="textarea" rows="3" col="col-12" />
+  </div>
+  <div class="mt-4 d-flex gap-2"><button class="btn btn-primary" type="submit"><i class="bi bi-check2 me-1"></i>@(edit ? "Save changes" : "Schedule")</button>
+    <a class="btn btn-outline-secondary" asp-route-action="Index" asp-route="default">Cancel</a></div>
+</form></div></div>

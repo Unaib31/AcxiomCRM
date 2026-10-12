@@ -1,0 +1,45 @@
+@model ListViewModel<ActivityDto, ActivityQuery>
+@{ ViewData["Title"] = "Activities"; var q = Model.Query; }
+<div class="page-header">
+  <div><h1>Activities</h1><div class="sub">Calls, meetings, emails and tasks</div></div>
+  <a class="btn btn-primary" asp-route-action="Create" asp-route="default"><i class="bi bi-plus-lg me-1"></i>Log activity</a>
+</div>
+<div class="card mb-3"><form method="get" class="filter-bar row g-2 align-items-end">
+  <div class="col-md-3"><label class="form-label small" for="search">Search</label><input id="search" name="search" value="@q.Search" class="form-control" placeholder="Subject, customer or lead" maxlength="100" /></div>
+  <div class="col-md-2"><label class="form-label small" for="type">Type</label><select id="type" name="type" class="form-select"><option value="">All</option>@foreach (var s in Enum.GetValues<ActivityType>()) { <option value="@s" selected="@(q.Type == s)">@s</option> }</select></div>
+  <div class="col-md-2"><label class="form-label small" for="status">Status</label><select id="status" name="status" class="form-select"><option value="">All</option>@foreach (var s in Enum.GetValues<ActivityStatus>()) { <option value="@s" selected="@(q.Status == s)">@s</option> }</select></div>
+  <div class="col-md-2"><label class="form-label small" for="from">From</label><input id="from" type="date" name="from" value="@q.From?.ToString("yyyy-MM-dd")" class="form-control" /></div>
+  <div class="col-md-2"><label class="form-label small" for="to">To</label><input id="to" type="date" name="to" value="@q.To?.ToString("yyyy-MM-dd")" class="form-control" /></div>
+  <div class="col-md-1 d-flex gap-2"><button class="btn btn-primary flex-fill" type="submit" aria-label="Apply filters"><i class="bi bi-funnel"></i></button></div>
+  <div class="col-md-3"><label class="form-label small" for="assignedTo">Assigned user</label><select id="assignedTo" name="assignedTo" class="form-select"><option value="">Anyone</option>@foreach (var o in Model.Owners) { <option value="@o.Id" selected="@(q.AssignedTo == o.Id)">@o.Name</option> }</select></div>
+</form></div>
+<div class="card">
+@if (Model.Result.Items.Count == 0) { <div class="empty-state"><i class="bi bi-telephone"></i><strong class="d-block text-body mb-1">No matching activities</strong>Try a different search or clear your filters.<div class="d-flex justify-content-center gap-3 mt-3"><a asp-route-action="Index" asp-route="default">Clear filters</a><a asp-route-action="Create" asp-route="default">Log activity <i class="bi bi-arrow-right"></i></a></div></div> }
+else
+{
+<div class="table-responsive"><table class="table table-hover">
+  <thead><tr>
+    <partial name="_SortTh" model='("Date", "date", (string?)null)' />
+    <partial name="_SortTh" model='("Type", "type", (string?)null)' />
+    <partial name="_SortTh" model='("Subject", "subject", (string?)null)' />
+    <th scope="col">Related to</th>
+    <partial name="_SortTh" model='("Status", "status", (string?)null)' />
+    <th scope="col">Assigned</th><th scope="col"><span class="visually-hidden">Actions</span></th>
+  </tr></thead>
+  <tbody>
+  @foreach (var a in Model.Result.Items)
+  {
+    <tr>
+      <td class="text-nowrap">@a.ActivityDate.ToString("dd MMM yyyy")</td>
+      <td><i class="bi bi-@(a.ActivityType switch { "Call" => "telephone", "Meeting" => "people", "Email" => "envelope", _ => "check2-square" }) me-1 text-muted"></i>@a.ActivityType</td>
+      <td><span class="row-title">@a.Subject</span>@if (!string.IsNullOrEmpty(a.Description)) { <div class="sub-text text-truncate maxw-720">@a.Description</div> }</td>
+      <td>@if (a.CustomerId is not null) { <a asp-route-controller="Customers" asp-route-action="Details" asp-route-id="@a.CustomerId" asp-route="default">@a.CustomerName</a> } @if (a.LeadId is not null) { <a asp-route-controller="Leads" asp-route-action="Details" asp-route-id="@a.LeadId" asp-route="default">@a.LeadName</a> }</td>
+      <td><span class="badge-soft badge-soft-@Ui.Badge(a.Status)">@a.Status</span></td>
+      <td>@a.AssignedToName</td>
+      <td class="text-end text-nowrap"><a class="btn btn-sm btn-outline-secondary" asp-route-action="Edit" asp-route-id="@a.ActivityId" aria-label="Edit @a.Subject" asp-route="default"><i class="bi bi-pencil"></i></a></td>
+    </tr>
+  }
+  </tbody></table></div>
+  <partial name="_Pager" model="(Model.Result.Page, Model.Result.TotalPages, Model.Result.TotalCount, Model.Result.PageSize)" />
+}
+</div>

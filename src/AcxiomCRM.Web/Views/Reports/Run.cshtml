@@ -1,0 +1,52 @@
+@model ReportRunViewModel
+@{
+  var r = Model.Result; var q = Model.Query; var def = r.Definition;
+  ViewData["Title"] = def.Title;
+  var exportQs = Context.Request.QueryString.Value;
+}
+<nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a asp-route-action="Index" asp-route="default">Reports</a></li><li class="breadcrumb-item active" aria-current="page">@def.Title</li></ol></nav>
+<div class="page-header">
+  <div><h1>@def.Title</h1><div class="sub">@def.Description</div></div>
+  <a class="btn btn-outline-primary" href="@(Url.Action("Export", new { id = def.Key }) + exportQs)"><i class="bi bi-download me-1"></i>Export CSV</a>
+</div>
+<div class="card mb-3"><form method="get" class="filter-bar row g-2 align-items-end">
+  <div class="col-md-2"><label class="form-label small" for="from">From</label><input id="from" type="date" name="from" value="@q.From?.ToString("yyyy-MM-dd")" class="form-control" /></div>
+  <div class="col-md-2"><label class="form-label small" for="to">To</label><input id="to" type="date" name="to" value="@q.To?.ToString("yyyy-MM-dd")" class="form-control" /></div>
+  @if (def.StatusOptions is { Length: > 0 } opts)
+  {
+    <div class="col-md-2"><label class="form-label small" for="status">@def.StatusLabel</label><select id="status" name="status" class="form-select"><option value="">All</option>@foreach (var o in opts) { <option value="@o" selected="@(q.Status == o)">@o</option> }</select></div>
+  }
+  @if (def.Key != "audit")
+  {
+    <div class="col-md-2"><label class="form-label small" for="assignedTo">Owner</label><select id="assignedTo" name="assignedTo" class="form-select"><option value="">Everyone in scope</option>@foreach (var o in Model.Owners) { <option value="@o.Id" selected="@(q.AssignedTo == o.Id)">@o.Name</option> }</select></div>
+  }
+  @if (r.Paged)
+  {
+    <div class="col-md-2"><label class="form-label small" for="search">Search</label><input id="search" name="search" value="@q.Search" class="form-control" maxlength="100" /></div>
+    <input type="hidden" name="sort" value="@q.Sort" /><input type="hidden" name="desc" value="@q.Desc.ToString().ToLower()" />
+  }
+  <div class="col-md-2 d-flex gap-2"><button class="btn btn-primary flex-fill" type="submit">Run</button><a class="btn btn-outline-secondary" asp-route-action="Run" asp-route-id="@def.Key" aria-label="Clear filters" asp-route="default"><i class="bi bi-x-lg"></i></a></div>
+</form></div>
+@if (r.Summary.Count > 0)
+{
+  <div class="row g-3 mb-3">
+  @foreach (var s in r.Summary) { <div class="col-6 col-md-3 col-xl-2"><div class="card"><div class="card-body py-2"><div class="sub-text text-uppercase">@s.Key</div><div class="h5 mb-0">@s.Value</div></div></div></div> }
+  </div>
+}
+@foreach (var sec in r.Sections)
+{
+  <div class="card mb-3">
+    <div class="card-header">@sec.Title</div>
+    @if (sec.Rows.Count == 0) { <div class="empty-state"><i class="bi bi-inbox"></i>No data for the selected filters.</div> }
+    else
+    {
+      <div class="table-responsive"><table class="table table-hover">
+        <thead><tr>@for (var i = 0; i < sec.Columns.Length; i++) { var sortKey = sec.SortKeys?[i]; var thClass = sec.NumericColumns.Contains(i) ? "num" : ""; if (r.Paged && sortKey is not null) { <partial name="_SortTh" model="(sec.Columns[i], sortKey, thClass)" /> } else { <th scope="col" class="@thClass">@sec.Columns[i]</th> } }</tr></thead>
+        <tbody>
+        @foreach (var row in sec.Rows) { <tr>@for (var i = 0; i < row.Length; i++) { <td class="@(sec.NumericColumns.Contains(i) ? "num" : "")">@row[i]</td> }</tr> }
+        </tbody>
+      </table></div>
+    }
+    @if (r.Paged) { <partial name="_Pager" model="(r.Page, r.TotalPages, r.TotalCount, r.PageSize)" /> }
+  </div>
+}

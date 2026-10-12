@@ -1,0 +1,28 @@
+@model ActivityInput
+@{
+  var id = ViewData["EntityId"] as int?;
+  var edit = id is not null;
+  ViewData["Title"] = edit ? "Edit activity" : "Log activity";
+}
+<div class="page-header"><div><h1>@ViewData["Title"]</h1><div class="sub">Record a conversation, meeting or task for your team.</div></div></div>
+<div class="card maxw-1000"><div class="card-body">
+<form method="post" asp-route-action="@(edit ? "Edit" : "Create")" asp-route-id="@id" novalidate asp-route="default">
+  <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
+  <div class="row g-3">
+    <crm-field for="ActivityType" type="select" items-key="Types" col="col-md-4" />
+    <crm-field for="Subject" col="col-md-8" autofocus="true" />
+    <crm-field for="ActivityDate" type="date" col="col-md-4" />
+    <crm-field for="Status" type="select" items-key="Statuses" col="col-md-4" />
+    <crm-field for="AssignedTo" label="Assigned user" type="select" items-key="Owners" col="col-md-4" />
+    <crm-field for="CustomerId" type="select" items-key="Customers" option-label="— none —" col="col-md-6" />
+    <crm-field for="LeadId" type="select" items-key="Leads" option-label="— none —" col="col-md-6" />
+    <crm-field for="Description" type="textarea" rows="4" col="col-12" />
+  </div>
+  <div class="mt-4 d-flex gap-2"><button class="btn btn-primary" type="submit"><i class="bi bi-check2 me-1"></i>@(edit ? "Save changes" : "Log activity")</button>
+    <a class="btn btn-outline-secondary" asp-route-action="Index" asp-route="default">Cancel</a></div>
+</form>
+@if (edit && !User.IsInRole(RoleNames.SalesExecutive))
+{
+  <form method="post" asp-route-action="Delete" asp-route-id="@id" class="mt-3" data-confirm="Delete this activity?" data-confirm-title="Delete activity" data-confirm-ok="Delete" asp-route="default"><button class="btn btn-sm btn-outline-danger" type="submit" data-no-lock><i class="bi bi-trash me-1"></i>Delete activity</button></form>
+}
+</div></div>

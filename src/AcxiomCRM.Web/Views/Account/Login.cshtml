@@ -1,0 +1,20 @@
+@model LoginViewModel
+@{ ViewData["Title"] = "Sign in"; var allowReg = (bool)(ViewData["AllowRegistration"] ?? false); }
+<h1 class="h3 fw-bold mb-1">Welcome back</h1>
+<p class="text-muted mb-4">Sign in to your AcxiomCRM account.</p>
+<form method="post" asp-route-action="Login" novalidate asp-route="default">
+  <input type="hidden" asp-for="ReturnUrl" />
+  <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
+  <div class="mb-3">
+    <label asp-for="UserName" class="form-label"></label>
+    <input asp-for="UserName" class="form-control" autocomplete="username" autofocus maxlength="256" />
+    <span asp-validation-for="UserName" class="field-error"></span>
+  </div>
+  <div class="mb-3">
+    <label asp-for="Password" class="form-label"></label>
+    <input asp-for="Password" class="form-control" autocomplete="current-password" maxlength="128" />
+    <span asp-validation-for="Password" class="field-error"></span>
+  </div>
+  <button class="btn btn-primary w-100 py-2" type="submit">Sign in</button>
+</form>
+@if (allowReg) { <p class="text-center text-muted mt-4 mb-0">New to AcxiomCRM? <a asp-route-action="Register" asp-route="default">Create an account</a></p> }

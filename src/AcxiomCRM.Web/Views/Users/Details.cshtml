@@ -1,0 +1,28 @@
+@model UserDetailsViewModel
+@{ var u = Model.User; ViewData["Title"] = u.FullName; }
+<nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a asp-route-action="Index" asp-route="default">Users</a></li><li class="breadcrumb-item active" aria-current="page">@u.FullName</li></ol></nav>
+<div class="page-header">
+  <div class="d-flex align-items-center gap-3"><span class="avatar avatar-lg">@Ui.Initials(u.FullName)</span><div><h1>@u.FullName</h1><div class="sub">@u.Email · @RoleNames.Display(u.Role)</div></div></div>
+  @if (Model.CanAdminister)
+  {
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-primary" asp-route-action="Edit" asp-route-id="@u.Id" asp-route="default"><i class="bi bi-pencil me-1"></i>Edit</a>
+      @if (u.IsLockedOut) { <form method="post" asp-route-action="Unlock" asp-route-id="@u.Id" asp-route="default"><button class="btn btn-warning" type="submit"><i class="bi bi-unlock me-1"></i>Unlock</button></form> }
+      <form method="post" asp-route-action="ResetLink" asp-route-id="@u.Id" data-confirm="Generate a one-time password reset link for @u.FullName? Any previous link stops working." data-confirm-title="Reset password" data-confirm-ok="Generate link" data-confirm-class="btn-primary" asp-route="default"><button class="btn btn-outline-primary" type="submit" data-no-lock><i class="bi bi-key me-1"></i>Reset password</button></form>
+      @if (!Model.IsSelf)
+      {
+        <form method="post" asp-route-action="SetActive" asp-route-id="@u.Id" data-confirm="@(u.IsActive ? $"Deactivate {u.FullName}? They will be signed out immediately and unable to sign in." : $"Activate {u.FullName}?")" data-confirm-title="@(u.IsActive ? "Deactivate user" : "Activate user")" data-confirm-ok="@(u.IsActive ? "Deactivate" : "Activate")" data-confirm-class="@(u.IsActive ? "btn-danger" : "btn-success")" asp-route="default">
+          <input type="hidden" name="active" value="@((!u.IsActive).ToString().ToLower())" /><button class="btn btn-outline-@(u.IsActive ? "danger" : "success")" type="submit" data-no-lock>@(u.IsActive ? "Deactivate" : "Activate")</button></form>
+      }
+    </div>
+  }
+</div>
+<div class="card maxw-860"><div class="card-body"><dl class="row detail-list mb-0">
+  <dt class="col-sm-4">Account status</dt><dd class="col-sm-8"><span class="badge-soft badge-soft-@(u.IsActive ? "success" : "secondary")">@(u.IsActive ? "Active" : "Inactive")</span></dd>
+  <dt class="col-sm-4">Lockout status</dt><dd class="col-sm-8">@if (u.IsLockedOut) { <span class="badge-soft badge-soft-danger">Locked until @Clock.ToLocal(u.LockoutEnd!.Value.UtcDateTime).ToString("dd MMM yyyy HH:mm")</span> } else { <span class="badge-soft badge-soft-success">Not locked</span> }</dd>
+  <dt class="col-sm-4">Failed sign-in attempts</dt><dd class="col-sm-8">@u.FailedLoginCount</dd>
+  <dt class="col-sm-4">Role</dt><dd class="col-sm-8">@RoleNames.Display(u.Role)</dd>
+  <dt class="col-sm-4">Reports to</dt><dd class="col-sm-8">@(u.ManagerName ?? "—")</dd>
+  <dt class="col-sm-4">Created</dt><dd class="col-sm-8">@Clock.ToLocal(u.CreatedDate).ToString("dd MMM yyyy")</dd>
+  <dt class="col-sm-4">Last sign-in</dt><dd class="col-sm-8 mb-0">@(u.LastLoginDate is { } d ? Clock.ToLocal(d).ToString("dd MMM yyyy HH:mm") : "Never")</dd>
+</dl></div></div>

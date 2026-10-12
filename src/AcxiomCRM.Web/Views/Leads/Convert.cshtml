@@ -1,0 +1,24 @@
+@model LeadConversionInput
+@{
+  var lead = (LeadDto)ViewData["Lead"]!;
+  ViewData["Title"] = "Convert lead";
+}
+<nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a asp-route-action="Index" asp-route="default">Leads</a></li><li class="breadcrumb-item"><a asp-route-action="Details" asp-route-id="@lead.LeadId" asp-route="default">@lead.LeadCode</a></li><li class="breadcrumb-item active">Convert</li></ol></nav>
+<div class="page-header"><div><h1>Convert lead</h1><div class="sub">@lead.LeadName · @(lead.CompanyName ?? "no company") · expected @Ui.Money(lead.ExpectedValue)</div></div></div>
+<div class="card maxw-860"><div class="card-body">
+<form method="post" asp-route-action="Convert" asp-route-id="@lead.LeadId" novalidate asp-route="default">
+  <div asp-validation-summary="All" class="alert alert-danger py-2"></div>
+  <div class="form-section">Customer</div>
+  <div class="row g-3">
+    <crm-field for="ExistingCustomerId" label="Link to an existing customer (optional)" type="select" items-key="Customers" option-label="Create a new customer from this lead" col="col-12" hint="A new customer copies the lead's name, company, email and phone. Duplicates are rejected." />
+  </div>
+  <div class="form-section">Opportunity</div>
+  <div class="row g-3">
+    <crm-field for="CreateOpportunity" type="checkbox" label="Also create an opportunity" col="col-12" />
+    <crm-field for="OpportunityName" col="col-md-12" />
+    <crm-field for="Amount" type="text" inputmode="decimal" prefix="₹" col="col-md-4" />
+    <crm-field for="Probability" type="number" col="col-md-4" />
+    <crm-field for="ExpectedCloseDate" type="date" col="col-md-4" hint="Defaults to 30 days from today." />
+  </div>
+  <div class="mt-4 d-flex gap-2"><button class="btn btn-success" type="submit"><i class="bi bi-arrow-repeat me-1"></i>Convert lead</button><a class="btn btn-outline-secondary" asp-route-action="Details" asp-route-id="@lead.LeadId" asp-route="default">Cancel</a></div>
+</form></div></div>

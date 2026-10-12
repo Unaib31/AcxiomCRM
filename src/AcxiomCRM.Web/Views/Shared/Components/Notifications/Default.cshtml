@@ -1,0 +1,28 @@
+@model NotificationSummary
+<div class="dropdown">
+  <button class="icon-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications (@Model.Count)">
+    <i class="bi bi-bell fs-5"></i>
+    @if (Model.Count > 0) { <span class="dot">@(Model.Count > 9 ? "9+" : Model.Count.ToString())</span> }
+  </button>
+  <div class="dropdown-menu dropdown-menu-end p-0 shadow menu-wide">
+    <div class="px-3 py-2 border-bottom fw-semibold">Follow-up reminders</div>
+    @if (Model.Items.Count == 0)
+    {
+      <div class="p-3 text-center text-muted small"><i class="bi bi-check2-circle fs-4 d-block"></i>You're all caught up.</div>
+    }
+    else
+    {
+      foreach (var n in Model.Items)
+      {
+        <a class="dropdown-item d-flex gap-2 py-2" asp-route-controller="FollowUps" asp-route-action="Edit" asp-route-id="@n.FollowUpId" asp-route="default">
+          <i class="bi @(n.Overdue ? "bi-exclamation-circle text-danger" : "bi-clock text-primary") mt-1"></i>
+          <span class="text-wrap">
+            <span class="d-block fw-semibold">@n.Subject</span>
+            <span class="d-block small text-muted">@(n.Related) · @(n.Overdue ? "Overdue since " : "Due ")@n.Date.ToString("dd MMM")</span>
+          </span>
+        </a>
+      }
+      <a class="dropdown-item text-center small py-2 border-top" asp-route-controller="FollowUps" asp-route-action="Index" asp-route-view="overdue" asp-route="default">View all follow-ups</a>
+    }
+  </div>
+</div>
