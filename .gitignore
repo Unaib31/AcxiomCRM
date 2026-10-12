@@ -12,3 +12,5 @@ TestResults/
 .env
 *.log
 node_modules/
+
+src/AcxiomCRM.Web/appsettings.Development.json
