@@ -17,21 +17,16 @@ cd src/AcxiomCRM.Web
 dotnet run            # http://localhost:5080  (Development profile)
 ```
 
-On first start the database is created and migrated automatically, roles are seeded and — **in Development only** — demo accounts and sample data are added:
+On first start, the database is created and migrated automatically, and roles are seeded.
 
-| Role | Email | Password |
-|---|---|---|
-| Admin | `admin@acxiom.local` | `Welcome#2026x` |
-| Manager | `manager@acxiom.local` | `Crm#Demo2026` |
-| Sales Executive | `arjun@acxiom.local`, `priya@acxiom.local` (both report to the manager) | `Crm#Demo2026` |
-| Sales Executive (no manager) | `rahul@acxiom.local` | `Crm#Demo2026` |
+**Development only:** Demo accounts and sample data are added in the Development environment. Configure credentials locally in `appsettings.Development.json`. Never publish development passwords or commit this file.
 
-These live in `appsettings.Development.json` and are refused outside Development (the app will not start with `Seed:DemoData=true` in any other environment).
+
 
 Swagger UI: `http://localhost:5080/swagger` (Development only). Health probe: `/health`.
 
 ```bash
-dotnet test           # from the repository root: 166 tests
+dotnet test           # from the repository root: 167 tests
 ```
 
 ## Roles and authorization
